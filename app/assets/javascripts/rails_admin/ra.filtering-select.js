@@ -31,6 +31,7 @@
     button: null,
     input: null,
     select: null,
+    filtering_select: null,
 
     _create: function() {
       this.filtering_select = this.element.siblings(

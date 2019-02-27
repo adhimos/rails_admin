@@ -232,7 +232,7 @@ module RailsAdmin
           @value = begin
             case @operator
             when 'default', 'like'
-              "%#{@value}%"
+              "#{@value}%"
             when 'starts_with'
               "#{@value}%"
             when 'ends_with'
@@ -248,7 +248,7 @@ module RailsAdmin
           #   ["(LOWER(#{@column}) LIKE ?)", @value]
           # end
 
-          ["(LOWER(#{@column}) LIKE ?)", @value]
+          ["(#{@column} LIKE ?)", @value]
         end
 
         def build_statement_for_enum

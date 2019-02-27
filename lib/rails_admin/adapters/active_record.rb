@@ -248,7 +248,7 @@ module RailsAdmin
           #   ["(LOWER(#{@column}) LIKE ?)", @value]
           # end
 
-          ["(#{@column} LIKE ?)", @value]
+          ["(LOWER(#{@column}) LIKE LOWER(?))", @value]
         end
 
         def build_statement_for_enum

@@ -242,11 +242,13 @@ module RailsAdmin
             end
           end
 
-          if ['postgresql', 'postgis'].include? ar_adapter
-            ["(#{@column} ILIKE ?)", @value]
-          else
-            ["(LOWER(#{@column}) LIKE ?)", @value]
-          end
+          # if ['postgresql', 'postgis'].include? ar_adapter
+          #   ["(#{@column} ILIKE ?)", @value]
+          # else
+          #   ["(LOWER(#{@column}) LIKE ?)", @value]
+          # end
+
+          ["(LOWER(#{@column}) LIKE ?)", @value]
         end
 
         def build_statement_for_enum

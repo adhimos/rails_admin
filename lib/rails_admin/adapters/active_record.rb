@@ -3,8 +3,6 @@ require 'rails_admin/adapters/active_record/abstract_object'
 require 'rails_admin/adapters/active_record/association'
 require 'rails_admin/adapters/active_record/property'
 
-@@current_table = 'NO_TABLE'
-
 module RailsAdmin
   module Adapters
     module ActiveRecord
@@ -108,7 +106,6 @@ module RailsAdmin
             @values << value1 unless value1.nil?
             @values << value2 unless value2.nil?
             table, column = column_infos[:column].split('.')
-            @@current_table = table
             @tables.push(table) if column
           end
         end
@@ -225,46 +222,30 @@ module RailsAdmin
 
         def build_statement_for_string_or_text
           return if @value.blank?
-          return ["(#{@column} = ?)", @value] if ['is', '='].include?(@operator) || @column.include?('.id')
+
+          return ["(#{@column} = ?)", @value] if ['is', '='].include?(@operator)
 
           unless ['postgresql', 'postgis'].include? ar_adapter
             @value = @value.mb_chars.downcase
           end
 
-          if ['hotels'].include? @@current_table
-            @value = begin
-              case @operator
-              when 'default', 'like'
-                "#{@value.sub(/^[0-9]+/, '').gsub(/[0-9]+/, '%')}%".gsub(/%{2,}/, '%')
-              when 'starts_with'
-                "#{@value}%"
-              when 'ends_with'
-                "%#{@value}"
-              else
-                return
-              end
-            end
-
-            ["(LOWER(#{@column}) LIKE LOWER(?))", @value]
-          else
-            @value = begin
-              case @operator
-              when 'default', 'like'
-                "%#{@value}%"
-              when 'starts_with'
-                "#{@value}%"
-              when 'ends_with'
-                "%#{@value}"
-              else
-                return
-              end
-            end
-
-            if ['postgresql', 'postgis'].include? ar_adapter
-              ["(#{@column} ILIKE ?)", @value]
+          @value = begin
+            case @operator
+            when 'default', 'like'
+              "%#{@value}%"
+            when 'starts_with'
+              "#{@value}%"
+            when 'ends_with'
+              "%#{@value}"
             else
-              ["(LOWER(#{@column}) LIKE ?)", @value]
+              return
             end
+          end
+
+          if ['postgresql', 'postgis'].include? ar_adapter
+            ["(#{@column} ILIKE ?)", @value]
+          else
+            ["(LOWER(#{@column}) LIKE ?)", @value]
           end
         end
 

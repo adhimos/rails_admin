@@ -1,4 +1,4 @@
-class CreateDivisionsMigration < ActiveRecord::Migration[5.0]
+class CreateDivisionsMigration < MigrationBase
   def self.up
     create_table :divisions do |t|
       t.timestamps null: false

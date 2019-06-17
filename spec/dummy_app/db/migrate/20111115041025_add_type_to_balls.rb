@@ -1,4 +1,4 @@
-class AddTypeToBalls < ActiveRecord::Migration[5.0]
+class AddTypeToBalls < MigrationBase
   def change
     add_column :balls, :type, :string
   end

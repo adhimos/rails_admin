@@ -1,4 +1,4 @@
-class AddMainSponsorToTeams < ActiveRecord::Migration[5.0]
+class AddMainSponsorToTeams < MigrationBase
   def change
     add_column :teams, :main_sponsor, :integer, default: 0, null: false
   end

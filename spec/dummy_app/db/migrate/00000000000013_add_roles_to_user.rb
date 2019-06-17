@@ -1,4 +1,4 @@
-class AddRolesToUser < ActiveRecord::Migration[5.0]
+class AddRolesToUser < MigrationBase
   def self.up
     add_column :users, :roles, :string
   end

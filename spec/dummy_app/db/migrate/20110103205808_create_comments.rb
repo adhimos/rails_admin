@@ -1,4 +1,4 @@
-class CreateComments < ActiveRecord::Migration[5.0]
+class CreateComments < MigrationBase
   def self.up
     create_table :comments do |t|
       t.integer :commentable_id

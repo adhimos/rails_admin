@@ -28,8 +28,6 @@ class Player
 
   before_destroy :destroy_hook
 
-  scope :rails_admin_search, ->(query) { where(name: query.reverse) }
-
   def destroy_hook; end
 
   def draft_id

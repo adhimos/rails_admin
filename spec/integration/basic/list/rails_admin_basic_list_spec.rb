@@ -292,26 +292,27 @@ describe 'RailsAdmin Basic List', type: :request do
       RailsAdmin.config Player do
         list { filters([:name, :team]) }
       end
-      visit index_path(model_name: 'player')
+      get index_path(model_name: 'player')
 
-      expect(JSON.parse(find('#filters_box')['data-options']).map(&:symbolize_keys)).to match_array [
-        {
-          index: 1,
-          label: 'Name',
-          name: 'name',
-          type: 'string',
-          value: '',
-          operator: nil,
-        },
-        {
-          index: 2,
-          label: 'Team',
-          name: 'team',
-          type: 'belongs_to_association',
-          value: '',
-          operator: nil,
-        },
-      ]
+      options = {
+        index: 1,
+        label: 'Name',
+        name: 'name',
+        type: 'string',
+        value: '',
+        operator: nil,
+      }
+      expect(response.body).to include("$.filters.append(#{options.to_json});")
+
+      options = {
+        index: 2,
+        label: 'Team',
+        name: 'team',
+        type: 'belongs_to_association',
+        value: '',
+        operator: nil,
+      }
+      expect(response.body).to include("$.filters.append(#{options.to_json});")
     end
   end
 
@@ -502,28 +503,6 @@ describe 'RailsAdmin Basic List', type: :request do
       end
       visit index_path(model_name: 'player', query: player.name[1..-1])
       is_expected.to have_no_content(player.name)
-    end
-  end
-
-  describe 'Custom search' do
-    before do
-      RailsAdmin.config do |config|
-        config.model Player do
-          list do
-            search_by :rails_admin_search
-          end
-        end
-      end
-    end
-    let!(:players) do
-      [FactoryBot.create(:player, name: 'Joe'),
-       FactoryBot.create(:player, name: 'George')]
-    end
-
-    it 'performs search using given scope' do
-      visit index_path(model_name: 'player', query: 'eoJ')
-      is_expected.to have_content(players[0].name)
-      is_expected.to have_no_content(players[1].name)
     end
   end
 

@@ -916,50 +916,50 @@ describe 'RailsAdmin Config DSL Edit Section', type: :request do
   end
 
   describe 'SimpleMDE Support' do
-    it 'works without error', js: true do
+    it 'adds Javascript to enable SimpleMDE' do
       RailsAdmin.config Draft do
         edit do
           field :notes, :simple_mde
         end
       end
-      expect { visit new_path(model_name: 'draft') }.not_to raise_error
-      is_expected.to have_selector('a[title="Markdown Guide"]')
+      visit new_path(model_name: 'draft')
+      is_expected.to have_selector('textarea#draft_notes[data-richtext="simplemde"]')
     end
   end
 
   describe 'CKEditor Support' do
-    it 'works without error', js: true do
+    it 'adds Javascript to enable CKEditor' do
       RailsAdmin.config Draft do
         edit do
           field :notes, :ck_editor
         end
       end
-      expect { visit new_path(model_name: 'draft') }.not_to raise_error
-      is_expected.to have_selector('#cke_draft_notes')
+      visit new_path(model_name: 'draft')
+      is_expected.to have_selector('textarea#draft_notes[data-richtext="ckeditor"]')
     end
   end
 
   describe 'CodeMirror Support' do
-    it 'works without error', js: true do
+    it 'adds Javascript to enable CodeMirror' do
       RailsAdmin.config Draft do
         edit do
           field :notes, :code_mirror
         end
       end
-      expect { visit new_path(model_name: 'draft') }.not_to raise_error
-      is_expected.to have_selector('.CodeMirror')
+      visit new_path(model_name: 'draft')
+      is_expected.to have_selector('textarea#draft_notes[data-richtext="codemirror"]')
     end
   end
 
   describe 'bootstrap_wysihtml5 Support' do
-    it 'works without error', js: true do
+    it 'adds Javascript to enable bootstrap_wysihtml5' do
       RailsAdmin.config Draft do
         edit do
           field :notes, :wysihtml5
         end
       end
-      expect { visit new_path(model_name: 'draft') }.not_to raise_error
-      is_expected.to have_selector('.wysihtml5-toolbar')
+      visit new_path(model_name: 'draft')
+      is_expected.to have_selector('textarea#draft_notes[data-richtext="bootstrap-wysihtml5"]')
     end
 
     it 'should include custom wysihtml5 configuration' do
@@ -979,14 +979,14 @@ describe 'RailsAdmin Config DSL Edit Section', type: :request do
   end
 
   describe 'Froala Support' do
-    it 'works without error', js: true do
+    it 'adds Javascript to enable Froala' do
       RailsAdmin.config Draft do
         edit do
           field :notes, :froala
         end
       end
-      expect { visit new_path(model_name: 'draft') }.not_to raise_error
-      is_expected.to have_selector('.fr-box')
+      visit new_path(model_name: 'draft')
+      is_expected.to have_selector('textarea#draft_notes[data-richtext="froala-wysiwyg"]')
     end
 
     it 'should include custom froala configuration' do
@@ -1004,18 +1004,6 @@ describe 'RailsAdmin Config DSL Edit Section', type: :request do
       is_expected.to have_selector("textarea#draft_notes[data-richtext=\"froala-wysiwyg\"][data-options]")
     end
   end
-
-  describe 'ActionText Support' do
-    it 'works without error', js: true do
-      RailsAdmin.config FieldTest do
-        edit do
-          field :action_text_field
-        end
-      end
-      expect { visit new_path(model_name: 'field_test') }.not_to raise_error
-      is_expected.to have_selector('trix-toolbar')
-    end
-  end if defined?(ActionText)
 
   describe 'Paperclip Support' do
     it 'shows a file upload field' do
@@ -1180,8 +1168,12 @@ describe 'RailsAdmin Config DSL Edit Section', type: :request do
       end
 
       after do
-        Team.reset_column_information
-        Team.attribute_type_decorations.clear
+        if Rails.version >= '4.2'
+          Team.reset_column_information
+          Team.attribute_type_decorations.clear
+        else
+          Team.serialized_attributes.clear
+        end
         Team.instance_eval { undef :color_enum }
       end
 
@@ -1214,76 +1206,49 @@ describe 'RailsAdmin Config DSL Edit Section', type: :request do
     end
   end
 
-  describe 'ActiveRecord::Enum support', active_record: true do
-    describe 'for string-keyed enum' do
+  if defined?(ActiveRecord) && ActiveRecord::VERSION::STRING >= '4.1'
+    describe 'ActiveRecord::Enum support', active_record: true do
       before do
-        RailsAdmin.config FieldTest do
+        class FieldTestWithEnum < FieldTest
+          self.table_name = 'field_tests'
+          enum integer_field: %w(foo bar)
+        end
+        RailsAdmin.config.included_models = [FieldTestWithEnum]
+        RailsAdmin.config FieldTestWithEnum do
           edit do
-            field :string_enum_field do
-              default_value 'M'
+            field :integer_field do
+              default_value 'foo'
             end
           end
         end
       end
 
-      it 'auto-detects enumeration' do
-        visit new_path(model_name: 'field_test')
-        is_expected.to have_selector('.enum_type select')
-        is_expected.not_to have_selector('.enum_type select[multiple]')
-        expect(all('.enum_type option').map(&:text).select(&:present?)).to eq %w(S M L)
-      end
-
-      it 'shows current value as selected' do
-        visit edit_path(model_name: 'field_test', id: FieldTest.create(string_enum_field: 'L'))
-        expect(find('.enum_type select').value).to eq 'l'
-      end
-
-      it 'can be updated' do
-        visit edit_path(model_name: 'field_test', id: FieldTest.create(string_enum_field: 'S'))
-        select 'L'
-        click_button 'Save'
-        expect(FieldTest.first.string_enum_field).to eq 'L'
-      end
-
-      it 'pre-populates default value' do
-        visit new_path(model_name: 'field_test')
-        expect(find('.enum_type select').value).to eq 'm'
-      end
-    end
-
-    describe 'for integer-keyed enum' do
-      before do
-        RailsAdmin.config FieldTest do
-          edit do
-            field :integer_enum_field do
-              default_value :medium
-            end
-          end
-        end
+      after do
+        Object.send :remove_const, :FieldTestWithEnum
       end
 
       it 'auto-detects enumeration' do
-        visit new_path(model_name: 'field_test')
+        visit new_path(model_name: 'field_test_with_enum')
         is_expected.to have_selector('.enum_type select')
         is_expected.not_to have_selector('.enum_type select[multiple]')
-        expect(all('.enum_type option').map(&:text).select(&:present?)).to eq %w(small medium large)
+        expect(all('.enum_type option').map(&:text).select(&:present?)).to eq %w(foo bar)
       end
 
       it 'shows current value as selected' do
-        visit edit_path(model_name: 'field_test', id: FieldTest.create(integer_enum_field: :large))
-        expect(find('.enum_type select').value).to eq "2"
+        visit edit_path(model_name: 'field_test_with_enum', id: FieldTestWithEnum.create(integer_field: 'bar'))
+        expect(find('.enum_type select').value).to eq '1'
       end
 
       it 'can be updated' do
-        visit edit_path(model_name: 'field_test', id: FieldTest.create(integer_enum_field: :small))
-        select 'large'
+        visit edit_path(model_name: 'field_test_with_enum', id: FieldTestWithEnum.create(integer_field: 'bar'))
+        select 'foo'
         click_button 'Save'
-        expect(FieldTest.first.integer_enum_field).to eq "large"
+        expect(FieldTestWithEnum.first.integer_field).to eq 'foo'
       end
 
       it 'pre-populates default value' do
-        visit new_path(model_name: 'field_test')
-        expect(find('.enum_type select').value).to eq "1"
+        visit new_path(model_name: 'field_test_with_enum')
+        expect(find('.enum_type select').value).to eq '0'
       end
     end
   end

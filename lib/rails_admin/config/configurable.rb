@@ -30,16 +30,14 @@ module RailsAdmin
         # and allows configurations such as
         # label { "#{label}".upcase }
         # This will use the default definition when called recursively.
-        Thread.current[:rails_admin_recurring] ||= {}
-        Thread.current[:rails_admin_recurring][self] ||= {}
-        if Thread.current[:rails_admin_recurring][self][option_name]
+        if instance_variable_get("@#{option_name}_recurring")
           instance_eval(&default_proc)
         else
-          Thread.current[:rails_admin_recurring][self][option_name] = true
+          instance_variable_set("@#{option_name}_recurring", true)
           instance_eval(&value_proc)
         end
       ensure
-        Thread.current[:rails_admin_recurring].delete(self)
+        instance_variable_set("@#{option_name}_recurring", false)
       end
 
       module ClassMethods

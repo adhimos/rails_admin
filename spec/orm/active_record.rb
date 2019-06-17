@@ -3,7 +3,11 @@ require 'rails_admin/adapters/active_record'
 
 DatabaseCleaner.strategy = :transaction
 
-ActiveRecord::Base.connection.data_sources.each do |table|
+if Rails.version >= '5.0'
+  ActiveRecord::Base.connection.data_sources
+else
+  ActiveRecord::Base.connection.tables
+end.each do |table|
   ActiveRecord::Base.connection.drop_table(table)
 end
 
@@ -37,9 +41,13 @@ class Tableless < ActiveRecord::Base
 
     def column(name, sql_type = nil, default = nil, null = true)
       define_attribute(name.to_s,
-                       connection.send(:lookup_cast_type, sql_type.to_s))
+                       connection.send(:lookup_cast_type, sql_type.to_s)) if ActiveRecord::VERSION::MAJOR >= 5
       columns <<
-        ActiveRecord::ConnectionAdapters::Column.new(name.to_s, default, connection.send(:lookup_cast_type, sql_type.to_s), sql_type.to_s, null)
+        if connection.respond_to?(:lookup_cast_type, true)
+          ActiveRecord::ConnectionAdapters::Column.new(name.to_s, default, connection.send(:lookup_cast_type, sql_type.to_s), sql_type.to_s, null)
+        else
+          ActiveRecord::ConnectionAdapters::Column.new(name.to_s, default, sql_type.to_s, null)
+        end
     end
 
     def columns_hash

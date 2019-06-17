@@ -16,28 +16,30 @@ module RailsAdmin
             }
           end
 
-          register_instance_option :version do
-            '5.46.0'
-          end
-
           # Pass the location of the theme and mode for Codemirror
           register_instance_option :assets do
             {
-              mode: "https://cdnjs.cloudflare.com/ajax/libs/codemirror/#{version}/mode/css/css.min.js",
-              theme: "https://cdnjs.cloudflare.com/ajax/libs/codemirror/#{version}/theme/night.min.css",
+              mode: ::ActionController::Base.helpers.asset_path('codemirror/modes/css.js'),
+              theme: ::ActionController::Base.helpers.asset_path('codemirror/themes/night.css'),
             }
           end
 
+          # Use this if you want to point to a cloud instances of CodeMirror
           register_instance_option :js_location do
-            "https://cdnjs.cloudflare.com/ajax/libs/codemirror/#{version}/codemirror.min.js"
+            ::ActionController::Base.helpers.asset_path('codemirror.js')
           end
 
+          # Use this if you want to point to a cloud instances of CodeMirror
           register_instance_option :css_location do
-            "https://cdnjs.cloudflare.com/ajax/libs/codemirror/#{version}/codemirror.min.css"
+            ::ActionController::Base.helpers.asset_path('codemirror.css')
           end
 
           register_instance_option :partial do
             :form_code_mirror
+          end
+
+          [:assets, :config, :css_location, :js_location].each do |key|
+            register_deprecated_instance_option :"codemirror_#{key}", key
           end
         end
       end

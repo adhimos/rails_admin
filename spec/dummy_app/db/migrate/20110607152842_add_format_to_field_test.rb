@@ -1,4 +1,4 @@
-class AddFormatToFieldTest < ActiveRecord::Migration[5.0]
+class AddFormatToFieldTest < MigrationBase
   def self.up
     add_column :field_tests, :format, :string
   end

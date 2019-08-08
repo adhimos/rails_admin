@@ -200,7 +200,7 @@
 
     _inputGroup: function(inputFor) {
       return $('<div>')
-        .addClass('input-group filtering-select col-sm-2')
+        .addClass('input-group filtering-select col-sm-12')
         .attr('data-input-for', inputFor)
         .css('float', this.element.css("float"));
     },
